@@ -59,7 +59,7 @@ jobs:
 
       - name: deploy with AWS codeDeploy
         run: aws deploy create-deployment
-          --application-name datashare-code-deploy
+          --application-name shareplay-swagger
           --deployment-config-name CodeDeployDefault.OneAtATime
           --deployment-group-name datashare-code-deploy-group
           --s3-location bucket=shareplay-swagger,bundleType=zip,key=shareplay-zip.zip
