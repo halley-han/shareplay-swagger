@@ -1,0 +1,887 @@
+###################################################################################
+#                                                                                 #
+#        목업 API                                                                  #
+#                                                                                 #
+###################################################################################
+'/mock':
+  post:
+    tags:
+      - mocking
+    summary: 데이터 추가(mocking)
+    description: 데이터를 추가합니다.
+    operationId: putMocking
+    security:
+      - Bearer: []
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 데이터 입력 부분 더미 예제
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/Contact'
+
+    responses:
+      '200':
+        description: 요청성공
+        schema:
+          $ref: './definitions.yaml#/definitions/Contact'
+      '401':
+        description: 사용자의 UUID가 잘못되었습니다.
+      '402':
+        description: 대상자의 UUID가 잘못되었습니다.
+  get:
+    tags:
+      - mocking
+    summary: 리스트 조회
+    security:
+      - Bearer: []
+    description: 리스트를 조회합니다.
+    operationId: getMocking
+    produces:
+      - application/json
+    responses:
+      '200':
+        description: 조회성공
+        schema:
+          type: array
+          items:
+            oneOf:
+              - $ref: './definitions.yaml#/definitions/Contact'
+              - $ref: './definitions.yaml#/definitions/Contact'
+              - $ref: './definitions.yaml#/definitions/Contact'
+      '400':
+        description: 잘못된 UUID 입니다.
+      '401':
+        description: 인증정보가 존재하지 않습니다.
+  patch:
+    tags:
+      - mocking
+    summary: 정보 수정
+    description: 정보를 수정합니다.
+    operationId: updateMocking
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 데이터 입력 부분 더미 예제
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/Contact'
+    responses:
+      '200':
+        description: 친구 정보 수정 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/Contact'
+      '401':
+        description: 사용자의 UUID가 잘못되었습니다.
+      '402':
+        description: 대상자의 UUID가 잘못되었습니다.
+      '403':
+        description: 닉네임 규칙에 맞지 않습니다.
+  delete:
+    tags:
+      - mocking
+    summary: 목업 삭제
+    description: 정보를 삭제 합니다.
+    operationId: deleteMocking
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 데이터 입력 부분 더미 예제
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/Contact'
+    responses:
+      '200':
+        description: 친구 정보 삭제 성공
+      '401':
+        description: 사용자의 UUID가 잘못되었습니다.
+      '402':
+        description: 대상자의 UUID가 잘못되었습니다.
+
+###################################################################################
+#                                                                                 #
+#        사용자 정보                                                                 #
+#                                                                                 #
+###################################################################################
+#
+#/user/login:
+# post:
+#   tags:
+#     - user
+#   summary: 회원 로그인
+#   description: 기존 등록된 정보가 있으면 로그인하고, 없으면 신규 생성하여 로그인 처리합니다. 카카오/페이스북/LG 계정등으로 로그인 할수 있습니다(2022년 현재 카카오만 지원)
+#   operationId: loginUser
+#   produces:
+#     - application/json
+#   parameters:
+#     - in: body
+#       name: body
+#       description: 회원가입시 사용되는 회원 입력 정보
+#       required: true
+#       schema:
+#         $ref: './definitions.yaml#/definitions/Login'
+#   responses:
+#     '200':
+#       description: 로그인 성공(기존 회원 존재)
+#       schema:
+#         $ref: './definitions.yaml#/definitions/User'
+#     '201':
+#       description: 로그인 성공(기존 회원 없어서 생성함)
+#     '401':
+#       description: 이미 존재 하는 닉네임
+/user/login:
+  post:
+    tags:
+      - user
+    summary: 로그인
+    description:
+    operationId: loginUser
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 아이디/패스워드입력
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/Login'
+    responses:
+      '200':
+        description: 로그인 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/LoginResult'
+      '412':
+        description: 데이터 베이스 오류
+      '413':
+        description: 데이터 검증 오류
+      '415':
+        description: 올바르지 않은 토큰
+      '416':
+        description: cognito error
+/user/token:
+  patch:
+    tags:
+      - user
+    summary: 토큰정보업데이트
+    description:
+    operationId: updateUserToken
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: UUID/old token/new token 입력
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/updateToken'
+    responses:
+      '200':
+        description: 토큰 업데이트 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/tokenResult'
+      '412':
+        description: 데이터 베이스 오류
+      '417':
+        description: 올바르지 않은 old token
+'/user/{UUID}':
+  get:
+    tags:
+      - user
+    summary: 사용자정보 조회
+    security:
+      - Bearer: []
+
+    description: 'UUID로 유저의 정보를 가져옵니다.'
+    operationId: getUserByUUID
+    produces:
+      - application/json
+    parameters:
+      - name: UUID
+        in: path
+        description: '사용자 조회키로 UUID를 사용합니다.'
+        required: true
+        type: string
+        default : "880798719"
+    responses:
+      '200':
+        description: 조회성공
+        schema:
+          $ref: './definitions.yaml#/definitions/userResponse'
+      '412':
+        description: 데이터 베이스 오류
+  patch:
+    tags:
+      - user
+    summary: 사용자 정보 수정
+    security:
+      - Bearer: []
+
+    description: 사용자 정보를 수정합니다. (현재는 닉네임 수정만 가능)
+    operationId: updateUser
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: nickName
+        description: 사용자 닉네임을 업데이트 할수 있습니다.
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/nickName'
+      - name: UUID
+        in: path
+        description: '사용자 조회키로 UUID를 사용합니다.'
+        required: true
+        type: string
+        default : "880798719"
+    responses:
+      '200':
+        description: 사용자 정보 수정 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/userResponse'
+      '412':
+        description: 데이터 베이스 오류
+      '413':
+        description: 데이터 검증 오류
+  delete:
+    tags:
+      - user
+    summary: 사용자 삭제
+    description: 사용자 정보를 삭제 합니다.
+    operationId: deleteUser
+    produces:
+      - application/json
+    parameters:
+      - name: UUID
+        in: path
+        description: '사용자 삭제 키로 UUID를 사용합니다.'
+        required: true
+        type: string
+        default : "051818714"
+    responses:
+      '200':
+        description: 사용자 정보 삭제 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/CommonDeleteResponseObject'
+      '412':
+        description: 데이터 베이스 오류
+'/user':
+  post:
+    tags:
+      - user
+    summary: 사용자정보 저장
+    security:
+      - Bearer: []
+
+    description: '사용자 정보를 저장합니다.'
+    operationId: insertUser
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 사용자 등록시 사용되는 정보
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/UserAdd'
+    responses:
+      '200':
+        description: 등록성공
+        schema:
+          $ref: './definitions.yaml#/definitions/userResponse'
+      '412':
+        description: 데이터 베이스 오류
+      '413':
+        description: 데이터 검증 오류
+      '414':
+        description: 이미 존재하는 유저
+      '415':
+        description: 올바르지 않은 토큰
+      '416':
+        description: cognito error
+  get:
+    tags:
+      - user
+    summary: 사용자정보 리스트 조회
+    description: '유저의 정보리스트를 가져옵니다.'
+    operationId: getUserList
+    produces:
+      - application/json
+    responses:
+      '200':
+        description: 조회성공
+        schema:
+          $ref: './definitions.yaml#/definitions/userListResponse'
+      '412':
+        description: 데이터 베이스 오류
+
+###################################################################################
+#                                                                                 #
+#        친구 정보                                                                  #
+#                                                                                 #
+###################################################################################
+'/contact/':
+  get:
+    tags:
+      - contact
+    summary: 친구 리스트 조회(관리자및테스트용)
+    security:
+      - Bearer: []
+    description: 전체등록된 친구리스트를 조회합니다.
+    operationId: getcontactByUUID
+    produces:
+      - application/json
+    responses:
+      '200':
+        description: 조회성공
+        schema:
+          $ref: './definitions.yaml#/definitions/contactListResponse'
+      '501':
+        description: 조회중 오류가 발생하였습니다.
+  post:
+    tags:
+      - contact
+    summary: 친구 추가
+    security:
+      - Bearer: []
+    description: 친구를 추가합니다.
+    operationId: putContactByUUID
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 친구요청 시 사용되는 정보
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/ContactAdd'
+    responses:
+      '200':
+        description: 요청성공
+        schema:
+          $ref: './definitions.yaml#/definitions/contactResponse'
+      '405':
+        description: 사용자 정보를 찾을수없습니다.
+      '406':
+        description: 대상자 정보를 찾을수없습니다.
+      '410':
+        description: 친구정보를 입력하던중 오류가 발생하였습니다.
+  patch:
+    tags:
+      - contact
+    summary: 친구 요청 수락/거절
+    security:
+      - Bearer: []
+    description: 친구 요청을 수락/거절합니다.
+    operationId: updateContact
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 친구수락/거절 시 사용되는 정보
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/ContactModify'
+    responses:
+      '200':
+        description: 친구 정보 수정 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/contactResponse'
+      '405':
+        description: 사용자 정보를 찾을수없습니다.
+      '406':
+        description: 대상자 정보를 찾을수없습니다.
+  delete:
+    tags:
+      - contact
+    summary: 친구/친구요청 삭제
+    security:
+      - Bearer: []
+    description: 친구 정보를 삭제 합니다.
+    operationId: deleteContact
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 친구 삭제시 사용되는 정보
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/ContactModify'
+    responses:
+      '200':
+        description: 친구 정보 삭제 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/CommonDeleteResponseObject'
+      '410':
+        description: 사용자 정보를 찾을수없습니다.
+      '411':
+        description: 대상자 정보를 찾을수없습니다.
+      '412':
+        description: 데이터 베이스 오류
+
+'/contact/{UUID}':
+  get:
+    tags:
+      - contact
+    summary: 친구 리스트 조회
+    security:
+      - Bearer: []
+    description: 특정사용자의 친구리스트를 조회합니다.
+    operationId: getSpecificContactByUUID
+    produces:
+      - application/json
+    parameters:
+      - name: UUID
+        in: path
+        description: '사용자의 UUID'
+        required: true
+        type: string
+        default : "123456789"
+    responses:
+      '200':
+        description: 조회성공
+        schema:
+          type: array
+          items:
+            oneOf:
+              - $ref: './definitions.yaml#/definitions/Contact'
+              - $ref: './definitions.yaml#/definitions/Contact'
+              - $ref: './definitions.yaml#/definitions/Contact'
+      '501':
+        description: 조회중 오류가 발생하였습니다.
+###################################################################################
+#                                                                                 #
+#        방 정보                                                                 #
+#                                                                                 #
+###################################################################################
+
+'/room':
+  get:
+    tags:
+      - room
+    summary: 방정보리스트를 가져옵니다.
+    security:
+      - Bearer: []
+    description: 생성된 방의 리스트를 가져옵니다.
+    operationId: getRoomList
+    produces:
+      - application/json
+    responses:
+      '200':
+        description: room정보 조회 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/RoomListObject'
+      '412':
+        description: 데이터 베이스 에러.
+
+  post:
+    tags:
+      - room
+    summary: 룸생성
+    security:
+      - Bearer: []
+    description: '신규 룸을 생성합니다.'
+    operationId: addroom
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: UUID
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/RoomCreate'
+    responses:
+      '200':
+        description: 방생성 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/RoomCreateResponse'
+      '412':
+        description: 데이터 베이스 에러.
+
+
+
+'/room/{roomId}':
+  get:
+    tags:
+      - room
+    summary: 방정보를 가져옵니다.
+    security:
+      - Bearer: []
+    description: 생성된 방의 상세정보를 가져옵니다.
+    operationId: getroomById
+    produces:
+      - application/json
+    parameters:
+      - name: roomId
+        in: path
+        description: roomID
+        required: true
+        type: integer
+        format: int64
+        default : '234320166458498792'
+    responses:
+      '200':
+        description: room정보 조회 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/RoomObject'
+      '412':
+        description: 데이터 베이스 에러.
+  delete:
+    tags:
+      - room
+    summary: Room 삭제
+    security:
+      - Bearer: []
+    description: 'Room을 지웁니다.'
+    operationId: deleteroom
+    produces:
+      - application/json
+    parameters:
+      - name: roomId
+        in: path
+        description: roomID
+        required: true
+        type: integer
+        format: int64
+        default : '234320166458498792'
+    responses:
+      '200':
+        description: room정보 삭제 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/CommonDeleteResponseObject'
+      '412':
+        description: 데이터 베이스 에러.
+
+'/room/my/{UUID}':
+  get:
+    tags:
+      - room
+    summary: 내가 만든 방정보를 가져옵니다.
+    security:
+      - Bearer: []
+    description: 생성된 방의 정보를 가져옵니다.
+    operationId: getMyRoom
+    produces:
+      - application/json
+    parameters:
+      - name: UUID
+        in: path
+        description: UUID
+        required: true
+        type: integer
+        format: int64
+        default : '154974564'
+    responses:
+      '200':
+        description: room정보 조회 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/RoomListObject'
+      '412':
+        description: 데이터 베이스 에러.
+
+###################################################################################
+#                                                                                 #
+#        초대                                                                      #
+#                                                                                 #
+###################################################################################
+
+/invite:
+  post:
+    tags:
+      - invite
+    summary: 초대
+    security:
+      - Bearer: []
+    description: '해당 룸에 초대합니다.'
+    operationId: addinvite
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: inviteObject
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/inviteCreate'
+    responses:
+      '200':
+        description: 해당방에 초대 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/inviteJoinResponseObject'
+      '412':
+        description: 데이터 베이스 에러.
+      '418':
+        description: 이미 초대되어있습니다.
+  delete:
+    tags:
+      - invite
+    summary: 전송된 초대내역을 삭제 합니다.
+    security:
+      - Bearer: []
+    description: '초대내역을 지웁니다.'
+    operationId: deleteinvite
+    produces:
+      - application/json
+    parameters:
+      - name: inviteId
+        in: body
+        description: inviteID
+        schema:
+          $ref: './definitions.yaml#/definitions/inviteDeleteObject'
+    responses:
+      '200':
+        description: invite정보 삭제 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/CommonDeleteResponseObject'
+      '412':
+        description: 데이터 베이스 에러.
+
+'/invite/send/{UUID}':
+  get:
+    tags:
+      - invite
+    summary: 초대전송 확인
+    security:
+      - Bearer: []
+    description: UUID를 이용하여 내가 초대전송한 내역을 가져옵니다.
+    operationId: getinviteById
+    produces:
+      - application/json
+    parameters:
+      - name: UUID
+        in: path
+        description: UUID
+        required: true
+        type: integer
+        format: int64
+        default : '880798719'
+    responses:
+      '200':
+        description: invite정보 조회 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/inviteJoinResponseObject'
+      '412':
+        description: 데이터 베이스 에러.
+
+'/invite/receive/{UUID}':
+  get:
+    tags:
+      - invite
+    summary: 초대목록확인
+    security:
+      - Bearer: []
+    description: UUID를 이용하여 나에게 온 초대 목록을 확인합니다.
+    operationId: getinviteById
+    produces:
+      - application/json
+    parameters:
+      - name: UUID
+        in: path
+        description: UUID
+        required: true
+        type: integer
+        format: int64
+        default : '880798719'
+    responses:
+      '200':
+        description: invite정보 조회 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/inviteJoinResponseObject'
+      '412':
+        description: 데이터 베이스 에러.
+
+
+###################################################################################
+#                                                                                 #
+#        참여자                                                                    #
+#                                                                                 #
+###################################################################################
+
+/participant:
+  post:
+    tags:
+      - participant
+    summary: 조인
+    security:
+      - Bearer: []
+    description: '해당 룸에 조인합니다.'
+    operationId: addparticipant
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: UUID
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/participantJoin'
+    responses:
+      '200':
+        description: 해당방에 조인 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/participantJoinResponseObject'
+      '412':
+        description: 데이터 베이스 에러.
+      '418':
+        description: 이미 참여되어있습니다.
+  delete:
+    tags:
+      - participant
+    summary: 방에 참여하고 있는 참여자 정보를 삭제합니다.
+    security:
+      - Bearer: []
+    description: 'participant을 지웁니다.'
+    operationId: deleteparticipant
+    produces:
+      - application/json
+    parameters:
+      - name: participantId
+        in: body
+        description: participantID
+        schema:
+          $ref: './definitions.yaml#/definitions/participantDeleteObject'
+    responses:
+      '200':
+        description: participant정보 삭제 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/CommonDeleteResponseObject'
+      '412':
+        description: 데이터 베이스 에러.
+
+'/participant/{roomID}':
+  get:
+    tags:
+      - participant
+    summary: Room별 참여자목록정보표시
+    security:
+      - Bearer: []
+    description: 방에 참여한 참여자 정보를 가져옵니다.
+    operationId: getparticipantById
+    produces:
+      - application/json
+    parameters:
+      - name: roomID
+        in: path
+        description: roomID
+        required: true
+        type: integer
+        format: int64
+        default : '234320166277247747'
+    responses:
+      '200':
+        description: participant정보 조회 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/participantListObject'
+      '412':
+        description: 데이터 베이스 에러.
+
+
+###################################################################################
+#                                                                                 #
+#        메시지                                                                    #
+#                                                                                 #
+###################################################################################
+
+/upload:
+  post:
+    tags:
+      - message
+    summary: 파일 업로드
+    security:
+      - Bearer: []
+    description: '파일을 업로드 합니다.'
+    operationId: addFile
+    consumes:
+      - multipart/form-data
+    produces:
+      - application/json
+    parameters:
+      - in: formData
+        name: upfile
+        type: file
+        required: true
+        description: The file to upload.
+      - in: formData
+        name: note
+        type: string
+        required: false
+        description: Description of file contents.
+    responses:
+      '200':
+        description: 해당방에 조인 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/participantJoinResponseObject'
+      '412':
+        description: 데이터 베이스 에러.
+      '418':
+        description: 이미 참여되어있습니다.
+
+
+
+/message:
+  post:
+    tags:
+      - message
+    summary: 메시지 전송
+    security:
+      - Bearer: []
+    description: '해당 룸에 메시지를 전송합니다.'
+    operationId: sendMessage
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: 메시지전송
+        required: true
+        schema:
+          $ref: './definitions.yaml#/definitions/messageRequestObject'
+    responses:
+      '200':
+        description: 해당방에 메시지 전송 성공
+        schema:
+          $ref: './definitions.yaml#/definitions/messageRequestObject'
+      '412':
+        description: 데이터 베이스 에러.
+'/message/{roomID}':
+  get:
+    tags:
+      - message
+    summary: 메시지 리스트
+    security:
+      - Bearer: []
+    description: 해당 룸에 전송되었던 메시지 리스트를 가져옵니다.
+    operationId: getMsgById
+    produces:
+      - application/json
+    parameters:
+      - name: roomID
+        in: path
+        description: roomID
+        required: true
+        type: integer
+        format: int64
+        default : '168215086443264582'
+    responses:
+      '200':
+        description: 메시지 정보 조회 성공.
+        schema:
+          $ref: './definitions.yaml#/definitions/messageListObject'
+      '412':
+        description: 데이터 베이스 에러.

@@ -1,0 +1,47 @@
+swagger: '2.0'
+info:
+  description: LGe DataShare Backend API를 구현하기 위한 API 명세서입니다.
+  version: 0.0.1
+  title: LGe DataShare Platform Backend API
+  termsOfService: 'http://swagger.io/terms/'
+  contact:
+    email: groove2u@tosky.co.kr
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+host: 'dsapis.tosky.co.kr'
+basePath: /dev/v1
+schemes:
+  - https
+
+tags:
+  - name: mocking
+    description: API 테스트용 더미 API입니다.
+    externalDocs:
+      description: DDB연동완료
+  - name: user
+    description: 사용자 기능에 대한 API 정의입니다. (로그인,회원생성,삭제,수정,조회 등 )
+    externalDocs:
+      description: Database 설계 추가 예정
+      url: 'http://datashare.tosky.co.kr'
+  - name: contact
+    description: 친구관련 기능에 대한 API 정의입니다.(친구맺기,조회,삭제 등 )
+  - name: room
+    description: 채팅방 동작 정의입니다.
+  - name: invite
+    description: 채팅방 참여자 초대에 대한 API 정의입니다.
+  - name: participant
+    description: 채팅방 참여자에 대한 API 정의입니다.
+  - name: message
+    description: 메시지 전송에 대한 API 정의입니다.
+paths:
+  $ref: './path.yaml'
+
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+externalDocs:
+  description: Find out more about  LGe DataShare Platform
+  url: 'http://datashare.tosky.co.kr'

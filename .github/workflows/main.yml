@@ -1,0 +1,65 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: deploy
+# 해당 브랜치가 push 될 때 해당 액션을 실행
+on:
+  pull_request:
+    branches: [ master ]
+# 액션을 실행시키는 runner의 운영체제
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    #액션의 실행 수행내용, 단계별로 실행된다.
+    steps:
+      - name: Checkout source code.
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # - name: delete package-lock.json
+      #   run: rm package-lock.json
+
+      #- name: Install dependencies
+      #  run: npm ci
+
+      # - name: build file
+      #   run: npm run build
+
+      #- name: create env file
+      #  working-directory: ./server
+      #  run:
+      #    touch .env
+      #    cat << EOF >> .env
+      #    ${{ secrets.ENV }}
+      #    EOF
+
+      - name: zip distributions
+        run: zip -r shareplay-zip.zip .
+        #run: git archive --format=zip master -o tosky-zip.zip
+
+      - name: AWS configure credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      #s3,codeDeploy 경로와 이름 알맞게 입력
+      - name: upload to S3
+        run: aws s3 cp --region ap-northeast-1 ./shareplay-zip.zip s3://shareplay-swagger/
+
+      - name: deploy with AWS codeDeploy
+        run: aws deploy create-deployment
+          --application-name datashare-code-deploy
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name datashare-code-deploy-group
+          --s3-location bucket=shareplay-swagger,bundleType=zip,key=shareplay-zip.zip

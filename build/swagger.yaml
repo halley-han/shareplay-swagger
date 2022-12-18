@@ -1,0 +1,1299 @@
+swagger: '2.0'
+info:
+  description: LGe DataShare Backend API를 구현하기 위한 API 명세서입니다.
+  version: 0.0.1
+  title: LGe DataShare Platform Backend API
+  termsOfService: 'http://swagger.io/terms/'
+  contact:
+    email: groove2u@tosky.co.kr
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+host: dsapis.tosky.co.kr
+basePath: /dev/v1
+schemes:
+  - https
+tags:
+  - name: mocking
+    description: API 테스트용 더미 API입니다.
+    externalDocs:
+      description: DDB연동완료
+  - name: user
+    description: '사용자 기능에 대한 API 정의입니다. (로그인,회원생성,삭제,수정,조회 등 )'
+    externalDocs:
+      description: Database 설계 추가 예정
+      url: 'http://datashare.tosky.co.kr'
+  - name: contact
+    description: '친구관련 기능에 대한 API 정의입니다.(친구맺기,조회,삭제 등 )'
+  - name: room
+    description: 채팅방 동작 정의입니다.
+  - name: invite
+    description: 채팅방 참여자 초대에 대한 API 정의입니다.
+  - name: participant
+    description: 채팅방 참여자에 대한 API 정의입니다.
+  - name: message
+    description: 메시지 전송에 대한 API 정의입니다.
+paths:
+  /mock:
+    post:
+      tags:
+        - mocking
+      summary: 데이터 추가(mocking)
+      description: 데이터를 추가합니다.
+      operationId: putMocking
+      security:
+        - Bearer: []
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 데이터 입력 부분 더미 예제
+          required: true
+          schema:
+            type: object
+            properties:
+              UUID:
+                description: 요청자의 고유아이디
+                type: string
+                default: 010 222 111
+              targetUUID:
+                description: 대상자의 고유아이디
+                type: string
+                default: 123 123 123
+              nickName:
+                description: 대상자의 닉네임
+                type: string
+                default: 유병권
+              createdAt:
+                description: 요청일자
+                type: integer
+                default: 1662332395075
+              updatedAt:
+                description: 상태업데이트 일자
+                type: integer
+                default: 1662332395075
+              status:
+                description: '친구 수락 여부(A:agree D:deny P:pending)'
+                type: string
+                enum:
+                  - A
+                  - D
+                  - P
+                default: P
+      responses:
+        '200':
+          description: 요청성공
+          schema:
+            $ref: '#/paths/~1mock/post/parameters/0/schema'
+        '401':
+          description: 사용자의 UUID가 잘못되었습니다.
+        '402':
+          description: 대상자의 UUID가 잘못되었습니다.
+    get:
+      tags:
+        - mocking
+      summary: 리스트 조회
+      security:
+        - Bearer: []
+      description: 리스트를 조회합니다.
+      operationId: getMocking
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 조회성공
+          schema:
+            type: array
+            items:
+              oneOf:
+                - $ref: '#/paths/~1mock/post/parameters/0/schema'
+                - $ref: '#/paths/~1mock/post/parameters/0/schema'
+                - $ref: '#/paths/~1mock/post/parameters/0/schema'
+        '400':
+          description: 잘못된 UUID 입니다.
+        '401':
+          description: 인증정보가 존재하지 않습니다.
+    patch:
+      tags:
+        - mocking
+      summary: 정보 수정
+      description: 정보를 수정합니다.
+      operationId: updateMocking
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 데이터 입력 부분 더미 예제
+          required: true
+          schema:
+            $ref: '#/paths/~1mock/post/parameters/0/schema'
+      responses:
+        '200':
+          description: 친구 정보 수정 성공
+          schema:
+            $ref: '#/paths/~1mock/post/parameters/0/schema'
+        '401':
+          description: 사용자의 UUID가 잘못되었습니다.
+        '402':
+          description: 대상자의 UUID가 잘못되었습니다.
+        '403':
+          description: 닉네임 규칙에 맞지 않습니다.
+    delete:
+      tags:
+        - mocking
+      summary: 목업 삭제
+      description: 정보를 삭제 합니다.
+      operationId: deleteMocking
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 데이터 입력 부분 더미 예제
+          required: true
+          schema:
+            $ref: '#/paths/~1mock/post/parameters/0/schema'
+      responses:
+        '200':
+          description: 친구 정보 삭제 성공
+        '401':
+          description: 사용자의 UUID가 잘못되었습니다.
+        '402':
+          description: 대상자의 UUID가 잘못되었습니다.
+  /user/login:
+    post:
+      tags:
+        - user
+      summary: 로그인
+      description: null
+      operationId: loginUser
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 아이디/패스워드입력
+          required: true
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: 발급받은9자리 UUID
+                default: 537351359
+              token:
+                type: string
+                description: SNS로그인시 획득한 token
+                default: 537351359sdf7896sd87f6S&*DF
+              email:
+                type: string
+                description: SNS로그인시 사용한 이메일
+                default: groove2u@tosky.co.kr
+              snsType:
+                type: string
+                description: SNS로그인시 획득한 token
+                default: K
+      responses:
+        '200':
+          description: 로그인 성공
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: message
+                default: Success
+              token:
+                type: string
+                description: JWT 토큰
+                default: eyJraWQiOiJPbHFYVE9XZCtEMHdWZFoxdUkyOGY0Mzl0MmNRNnljdGxTYTNBT09NSE1RPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiI0YWI5ZDVkMS01MDM4LTQyNDAtYTk2YS01NDM4ZjRhNDRhYjciLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuYXAtbm9ydGhlYXN0LTIuYW1hem9uYXdzLmNvbVwvYXAtbm9ydGhlYXN0LTJfbW5rVENWMG1qIiwiY29nbml0bzp1c2VybmFtZSI6IncxdFFWRVRDWHNHWGozaXZfYmZGZkF5UGdDWnFMNUpNcXNLYnRkb2tDaWx2dVFBQUFZTEVlQ1RnIiwib3JpZ2luX2p0aSI6ImNmMWFjMzVjLTAwYmItNDRhZS05NmI1LWI5NzhjYTI0NDIzOSIsImF1ZCI6IjJ0ZWQwazM2MDBnYmk4M3M5OGV2aGoycjI5IiwiZXZlbnRfaWQiOiJiODY3MDc1NC04YThlLTRkMDItYTFmZi0xZjI4YzQ2M2E2MmIiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTY2MTE2MjI3MywibmFtZSI6IncxdFFWRVRDWHNHWGozaXZfYmZGZkF5UGdDWnFMNUpNcXNLYnRkb2tDaWx2dVFBQUFZTEVlQ1RnIiwiZXhwIjoxNjYxMTgwMjczLCJpYXQiOjE2NjExNjIyNzMsImp0aSI6IjkzMDVhNTA4LTMxNzgtNGQzMy05MTIwLTYyZDhlZGE2MDM5NCJ9.ONFWZTh1nQ7XGpKzITYtR9hcVInsvtR1xdTQV4UWHbczsxx_qfa1td69t4hcL-WP2hFYl9K7ilWIvf3NjMggSddRq1R-gMXv6w_5gFohKAuQj5ZFlrgEcP7avnKVFJwoC6EcA5wGQNY3BI_bQgAPTFefUM9agGg5iIv-l7HIqxQmAX9l2Ey4EVTaVxvWEYZ4zJOf6z00iwED2Nvv7sUl6cz2Hcd5WII-2kLlOrwb_q6JKBj5a8pR8cIlRSM93L8b0s-DqiO4ojynBX3mrHlikao7y22m6FuVIlh4Qc89OD9IFky4ipEO5MbMPaRkAc4AhAkB8oEdyr87WDCRMg69mQ
+        '412':
+          description: 데이터 베이스 오류
+        '413':
+          description: 데이터 검증 오류
+        '415':
+          description: 올바르지 않은 토큰
+        '416':
+          description: cognito error
+  /user/token:
+    patch:
+      tags:
+        - user
+      summary: 토큰정보업데이트
+      description: null
+      operationId: updateUserToken
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: UUID/old token/new token 입력
+          required: true
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: '유저공개아이디(외부노출용 ex: 123 123 123)'
+                default: 880798719
+              old_token:
+                type: string
+                description: 구형 토큰
+                default: 901pVHTlXJl8mZaD7xmsEtU7-WqNZ3EsUsYKM5kECj1zFwAAAYN9nNEq
+              new_token:
+                type: string
+                description: 갱신 토큰
+                default: 901pVHTlXJl8mZaD7xmsEtU7-WqNZ3EsUsYKM5kECj1zFwAAAYN9nNEq
+      responses:
+        '200':
+          description: 토큰 업데이트 성공
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                $ref: '#/paths/~1user/post/responses/200/schema/properties/data'
+        '412':
+          description: 데이터 베이스 오류
+        '417':
+          description: 올바르지 않은 old token
+  '/user/{UUID}':
+    get:
+      tags:
+        - user
+      summary: 사용자정보 조회
+      security:
+        - Bearer: []
+      description: UUID로 유저의 정보를 가져옵니다.
+      operationId: getUserByUUID
+      produces:
+        - application/json
+      parameters:
+        - name: UUID
+          in: path
+          description: 사용자 조회키로 UUID를 사용합니다.
+          required: true
+          type: string
+          default: '880798719'
+      responses:
+        '200':
+          description: 조회성공
+          schema:
+            $ref: '#/paths/~1user/post/responses/200/schema'
+        '412':
+          description: 데이터 베이스 오류
+    patch:
+      tags:
+        - user
+      summary: 사용자 정보 수정
+      security:
+        - Bearer: []
+      description: 사용자 정보를 수정합니다. (현재는 닉네임 수정만 가능)
+      operationId: updateUser
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: nickName
+          description: 사용자 닉네임을 업데이트 할수 있습니다.
+          required: true
+          schema:
+            type: object
+            properties:
+              nickName:
+                type: string
+                description: 닉네임
+                default: 유병권
+        - name: UUID
+          in: path
+          description: 사용자 조회키로 UUID를 사용합니다.
+          required: true
+          type: string
+          default: '880798719'
+      responses:
+        '200':
+          description: 사용자 정보 수정 성공
+          schema:
+            $ref: '#/paths/~1user/post/responses/200/schema'
+        '412':
+          description: 데이터 베이스 오류
+        '413':
+          description: 데이터 검증 오류
+    delete:
+      tags:
+        - user
+      summary: 사용자 삭제
+      description: 사용자 정보를 삭제 합니다.
+      operationId: deleteUser
+      produces:
+        - application/json
+      parameters:
+        - name: UUID
+          in: path
+          description: 사용자 삭제 키로 UUID를 사용합니다.
+          required: true
+          type: string
+          default: 051818714
+      responses:
+        '200':
+          description: 사용자 정보 삭제 성공
+          schema:
+            $ref: '#/paths/~1invite/delete/responses/200/schema'
+        '412':
+          description: 데이터 베이스 오류
+  /user:
+    post:
+      tags:
+        - user
+      summary: 사용자정보 저장
+      security:
+        - Bearer: []
+      description: 사용자 정보를 저장합니다.
+      operationId: insertUser
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 사용자 등록시 사용되는 정보
+          required: true
+          schema:
+            type: object
+            properties:
+              nickName:
+                type: string
+                description: 닉네임
+                default: 유병권
+              snsType:
+                type: string
+                default: K
+              token:
+                type: string
+                default: w1tQVETCXsGXj3iv_bfFfAyPgCZqL5JMqsKbtdokCilvuQAAAYLEeCTg
+              agree:
+                type: string
+                description: 약관 동의 여부
+                default: 'Y'
+      responses:
+        '200':
+          description: 등록성공
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                type: object
+                properties:
+                  nickName:
+                    type: string
+                    description: 닉네임
+                    default: 유병권
+                  snsType:
+                    type: string
+                    default: K
+                  token:
+                    type: string
+                    default: w1tQVETCXsGXj3iv_bfFfAyPgCZqL5JMqsKbtdokCilvuQAAAYLEeCTg
+                  agree:
+                    type: string
+                    description: 약관 동의 여부
+                    default: 'Y'
+                  createdAt:
+                    description: 요청일자
+                    type: string
+                    default: 1662332395075
+                  updatedAt:
+                    description: 상태업데이트 일자
+                    type: string
+                    default: 1662332395075
+        '412':
+          description: 데이터 베이스 오류
+        '413':
+          description: 데이터 검증 오류
+        '414':
+          description: 이미 존재하는 유저
+        '415':
+          description: 올바르지 않은 토큰
+        '416':
+          description: cognito error
+    get:
+      tags:
+        - user
+      summary: 사용자정보 리스트 조회
+      description: 유저의 정보리스트를 가져옵니다.
+      operationId: getUserList
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 조회성공
+          schema:
+            type: object
+            allOf:
+              - type: object
+                properties:
+                  status:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  data:
+                    type: object
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/paths/~1user/post/responses/200/schema/properties/data'
+                    - $ref: '#/paths/~1user/post/responses/200/schema/properties/data'
+                    - $ref: '#/paths/~1user/post/responses/200/schema/properties/data'
+        '412':
+          description: 데이터 베이스 오류
+  /contact/:
+    get:
+      tags:
+        - contact
+      summary: 친구 리스트 조회(관리자및테스트용)
+      security:
+        - Bearer: []
+      description: 전체등록된 친구리스트를 조회합니다.
+      operationId: getcontactByUUID
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 조회성공
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/paths/~1mock/post/parameters/0/schema'
+                    - $ref: '#/paths/~1mock/post/parameters/0/schema'
+                    - $ref: '#/paths/~1mock/post/parameters/0/schema'
+        '501':
+          description: 조회중 오류가 발생하였습니다.
+    post:
+      tags:
+        - contact
+      summary: 친구 추가
+      security:
+        - Bearer: []
+      description: 친구를 추가합니다.
+      operationId: putContactByUUID
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 친구요청 시 사용되는 정보
+          required: true
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: 사용자의 UUID
+                required: true
+                default: '119062965'
+              targetUUID:
+                type: string
+                description: 친구 요청을 보낼 대상자의 UUID
+                required: true
+                default: '372669847'
+              nickName:
+                type: string
+                description: 상대방의 닉네임(내친구목록에노출)
+                required: true
+                default: 유저B
+      responses:
+        '200':
+          description: 요청성공
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                $ref: '#/paths/~1mock/post/parameters/0/schema'
+        '405':
+          description: 사용자 정보를 찾을수없습니다.
+        '406':
+          description: 대상자 정보를 찾을수없습니다.
+        '410':
+          description: 친구정보를 입력하던중 오류가 발생하였습니다.
+    patch:
+      tags:
+        - contact
+      summary: 친구 요청 수락/거절
+      security:
+        - Bearer: []
+      description: 친구 요청을 수락/거절합니다.
+      operationId: updateContact
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 친구수락/거절 시 사용되는 정보
+          required: true
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: 사용자의 UUID
+                required: true
+                default: '119062965'
+              targetUUID:
+                type: string
+                description: 대상자의 UUID
+                required: true
+                default: '372669847'
+              status:
+                description: '친구 수락 여부(A:agree D:deny P:pending)'
+                type: string
+                enum:
+                  - A
+                  - D
+                  - P
+                default: A
+      responses:
+        '200':
+          description: 친구 정보 수정 성공
+          schema:
+            $ref: '#/paths/~1contact~1/post/responses/200/schema'
+        '405':
+          description: 사용자 정보를 찾을수없습니다.
+        '406':
+          description: 대상자 정보를 찾을수없습니다.
+    delete:
+      tags:
+        - contact
+      summary: 친구/친구요청 삭제
+      security:
+        - Bearer: []
+      description: 친구 정보를 삭제 합니다.
+      operationId: deleteContact
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 친구 삭제시 사용되는 정보
+          required: true
+          schema:
+            $ref: '#/paths/~1contact~1/patch/parameters/0/schema'
+      responses:
+        '200':
+          description: 친구 정보 삭제 성공
+          schema:
+            $ref: '#/paths/~1invite/delete/responses/200/schema'
+        '410':
+          description: 사용자 정보를 찾을수없습니다.
+        '411':
+          description: 대상자 정보를 찾을수없습니다.
+        '412':
+          description: 데이터 베이스 오류
+  '/contact/{UUID}':
+    get:
+      tags:
+        - contact
+      summary: 친구 리스트 조회
+      security:
+        - Bearer: []
+      description: 특정사용자의 친구리스트를 조회합니다.
+      operationId: getSpecificContactByUUID
+      produces:
+        - application/json
+      parameters:
+        - name: UUID
+          in: path
+          description: 사용자의 UUID
+          required: true
+          type: string
+          default: '123456789'
+      responses:
+        '200':
+          description: 조회성공
+          schema:
+            type: array
+            items:
+              oneOf:
+                - $ref: '#/paths/~1mock/post/parameters/0/schema'
+                - $ref: '#/paths/~1mock/post/parameters/0/schema'
+                - $ref: '#/paths/~1mock/post/parameters/0/schema'
+        '501':
+          description: 조회중 오류가 발생하였습니다.
+  /room:
+    get:
+      tags:
+        - room
+      summary: 방정보리스트를 가져옵니다.
+      security:
+        - Bearer: []
+      description: 생성된 방의 리스트를 가져옵니다.
+      operationId: getRoomList
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: room정보 조회 성공.
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/paths/~1room~1%7BroomId%7D/get/responses/200/schema/properties/data'
+                    - $ref: '#/paths/~1room~1%7BroomId%7D/get/responses/200/schema/properties/data'
+                    - $ref: '#/paths/~1room~1%7BroomId%7D/get/responses/200/schema/properties/data'
+        '412':
+          description: 데이터 베이스 에러.
+    post:
+      tags:
+        - room
+      summary: 룸생성
+      security:
+        - Bearer: []
+      description: 신규 룸을 생성합니다.
+      operationId: addroom
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: UUID
+          required: true
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: 사용자의 UUID
+                required: true
+                default: '119062965'
+      responses:
+        '200':
+          description: 방생성 성공
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                type: object
+                oneOf:
+                  - $ref: '#/paths/~1room~1%7BroomId%7D/get/responses/200/schema/properties/data'
+        '412':
+          description: 데이터 베이스 에러.
+  '/room/{roomId}':
+    get:
+      tags:
+        - room
+      summary: 방정보를 가져옵니다.
+      security:
+        - Bearer: []
+      description: 생성된 방의 상세정보를 가져옵니다.
+      operationId: getroomById
+      produces:
+        - application/json
+      parameters:
+        - name: roomId
+          in: path
+          description: roomID
+          required: true
+          type: integer
+          format: int64
+          default: '234320166458498792'
+      responses:
+        '200':
+          description: room정보 조회 성공.
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                type: object
+                properties:
+                  UUID:
+                    type: string
+                    description: 사용자의 UUID
+                    required: true
+                    default: '119062965'
+                  roomID:
+                    type: string
+                    description: 생성된 Room ID
+                    required: true
+                    default: '119062965544238048'
+                  createdAt:
+                    type: integer
+                    description: 생성 시간
+                    required: true
+                    default: '1664611921805'
+                  updatedAt:
+                    type: integer
+                    description: 업데이트 시간
+                    required: true
+                    default: '1664611921805'
+        '412':
+          description: 데이터 베이스 에러.
+    delete:
+      tags:
+        - room
+      summary: Room 삭제
+      security:
+        - Bearer: []
+      description: Room을 지웁니다.
+      operationId: deleteroom
+      produces:
+        - application/json
+      parameters:
+        - name: roomId
+          in: path
+          description: roomID
+          required: true
+          type: integer
+          format: int64
+          default: '234320166458498792'
+      responses:
+        '200':
+          description: room정보 삭제 성공.
+          schema:
+            $ref: '#/paths/~1invite/delete/responses/200/schema'
+        '412':
+          description: 데이터 베이스 에러.
+  '/room/my/{UUID}':
+    get:
+      tags:
+        - room
+      summary: 내가 만든 방정보를 가져옵니다.
+      security:
+        - Bearer: []
+      description: 생성된 방의 정보를 가져옵니다.
+      operationId: getMyRoom
+      produces:
+        - application/json
+      parameters:
+        - name: UUID
+          in: path
+          description: UUID
+          required: true
+          type: integer
+          format: int64
+          default: '154974564'
+      responses:
+        '200':
+          description: room정보 조회 성공.
+          schema:
+            $ref: '#/paths/~1room/get/responses/200/schema'
+        '412':
+          description: 데이터 베이스 에러.
+  /invite:
+    post:
+      tags:
+        - invite
+      summary: 초대
+      security:
+        - Bearer: []
+      description: 해당 룸에 초대합니다.
+      operationId: addinvite
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: inviteObject
+          required: true
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: 사용자의 UUID
+                required: true
+                default: '234320166'
+              targetUUID:
+                type: string
+                description: 대상자의 UUID
+                required: true
+                default: '880798719'
+              roomID:
+                type: string
+                description: 조인할 roomID
+                required: true
+                default: '234320166277247747'
+      responses:
+        '200':
+          description: 해당방에 초대 성공
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: 사용자의 UUID
+                required: true
+                default: '119062965'
+              targetUUID:
+                type: string
+                description: 대상자의 UUID
+                required: true
+                default: '880798719'
+              inviteID:
+                type: string
+                description: 초대 고유아이디
+                required: true
+                default: cd12a4b0-dabb-45d1-821d-73c48d0f7241
+              roomID:
+                type: string
+                description: 생성된 Room ID
+                required: true
+                default: '119062965544238048'
+              createdAt:
+                type: integer
+                description: 생성 시간
+                required: true
+                default: '1664611921805'
+              updatedAt:
+                type: integer
+                description: 업데이트 시간
+                required: true
+                default: '1664611921805'
+              status:
+                type: string
+                description: 상태
+                required: true
+                default: P
+        '412':
+          description: 데이터 베이스 에러.
+        '418':
+          description: 이미 초대되어있습니다.
+    delete:
+      tags:
+        - invite
+      summary: 전송된 초대내역을 삭제 합니다.
+      security:
+        - Bearer: []
+      description: 초대내역을 지웁니다.
+      operationId: deleteinvite
+      produces:
+        - application/json
+      parameters:
+        - name: inviteId
+          in: body
+          description: inviteID
+          schema:
+            type: object
+            properties:
+              inviteID:
+                type: string
+                description: 초대 ID
+                required: true
+                default: d5d55787-d1a6-4e7c-87c1-eefb3c14a9be
+      responses:
+        '200':
+          description: invite정보 삭제 성공.
+          schema:
+            type: object
+            properties:
+              TableName:
+                type: string
+                description: 해당 테이블 이름
+                required: true
+              Key:
+                type: object
+                description: 해당 테이블의 Key (Delete Path마다 Key가 다르게 존재함)
+                properties:
+                  partitionKey:
+                    default: roomID
+        '412':
+          description: 데이터 베이스 에러.
+  '/invite/send/{UUID}':
+    get:
+      tags:
+        - invite
+      summary: 초대전송 확인
+      security:
+        - Bearer: []
+      description: UUID를 이용하여 내가 초대전송한 내역을 가져옵니다.
+      operationId: getinviteById
+      produces:
+        - application/json
+      parameters:
+        - name: UUID
+          in: path
+          description: UUID
+          required: true
+          type: integer
+          format: int64
+          default: '880798719'
+      responses:
+        '200':
+          description: invite정보 조회 성공.
+          schema:
+            $ref: '#/paths/~1invite/post/responses/200/schema'
+        '412':
+          description: 데이터 베이스 에러.
+  '/invite/receive/{UUID}':
+    get:
+      tags:
+        - invite
+      summary: 초대목록확인
+      security:
+        - Bearer: []
+      description: UUID를 이용하여 나에게 온 초대 목록을 확인합니다.
+      operationId: getinviteById
+      produces:
+        - application/json
+      parameters:
+        - name: UUID
+          in: path
+          description: UUID
+          required: true
+          type: integer
+          format: int64
+          default: '880798719'
+      responses:
+        '200':
+          description: invite정보 조회 성공.
+          schema:
+            $ref: '#/paths/~1invite/post/responses/200/schema'
+        '412':
+          description: 데이터 베이스 에러.
+  /participant:
+    post:
+      tags:
+        - participant
+      summary: 조인
+      security:
+        - Bearer: []
+      description: 해당 룸에 조인합니다.
+      operationId: addparticipant
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: UUID
+          required: true
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: 사용자의 UUID
+                required: true
+                default: '880798719'
+              roomID:
+                type: string
+                description: 조인할 roomID
+                required: true
+                default: '234320166277247747'
+      responses:
+        '200':
+          description: 해당방에 조인 성공
+          schema:
+            $ref: '#/paths/~1upload/post/responses/200/schema'
+        '412':
+          description: 데이터 베이스 에러.
+        '418':
+          description: 이미 참여되어있습니다.
+    delete:
+      tags:
+        - participant
+      summary: 방에 참여하고 있는 참여자 정보를 삭제합니다.
+      security:
+        - Bearer: []
+      description: participant을 지웁니다.
+      operationId: deleteparticipant
+      produces:
+        - application/json
+      parameters:
+        - name: participantId
+          in: body
+          description: participantID
+          schema:
+            type: object
+            properties:
+              participantID:
+                type: string
+                description: 참여자 ID
+                required: true
+                default: d5d55787-d1a6-4e7c-87c1-eefb3c14a9be
+      responses:
+        '200':
+          description: participant정보 삭제 성공.
+          schema:
+            $ref: '#/paths/~1invite/delete/responses/200/schema'
+        '412':
+          description: 데이터 베이스 에러.
+  '/participant/{roomID}':
+    get:
+      tags:
+        - participant
+      summary: Room별 참여자목록정보표시
+      security:
+        - Bearer: []
+      description: 방에 참여한 참여자 정보를 가져옵니다.
+      operationId: getparticipantById
+      produces:
+        - application/json
+      parameters:
+        - name: roomID
+          in: path
+          description: roomID
+          required: true
+          type: integer
+          format: int64
+          default: '234320166277247747'
+      responses:
+        '200':
+          description: participant정보 조회 성공.
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/paths/~1upload/post/responses/200/schema'
+                    - $ref: '#/paths/~1upload/post/responses/200/schema'
+                    - $ref: '#/paths/~1upload/post/responses/200/schema'
+        '412':
+          description: 데이터 베이스 에러.
+  /upload:
+    post:
+      tags:
+        - message
+      summary: 파일 업로드
+      security:
+        - Bearer: []
+      description: 파일을 업로드 합니다.
+      operationId: addFile
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: upfile
+          type: file
+          required: true
+          description: The file to upload.
+        - in: formData
+          name: note
+          type: string
+          required: false
+          description: Description of file contents.
+      responses:
+        '200':
+          description: 해당방에 조인 성공
+          schema:
+            type: object
+            properties:
+              UUID:
+                type: string
+                description: 사용자의 UUID
+                required: true
+                default: '119062965'
+              roomID:
+                type: string
+                description: 생성된 Room ID
+                required: true
+                default: '119062965544238048'
+              createdAt:
+                type: integer
+                description: 생성 시간
+                required: true
+                default: '1664611921805'
+              updatedAt:
+                type: integer
+                description: 업데이트 시간
+                required: true
+                default: '1664611921805'
+              participantID:
+                type: string
+                description: 참여자 고유 아이디
+                required: true
+                default: a63280ae-b760-4e4e-b612-984009e2d961
+        '412':
+          description: 데이터 베이스 에러.
+        '418':
+          description: 이미 참여되어있습니다.
+  /message:
+    post:
+      tags:
+        - message
+      summary: 메시지 전송
+      security:
+        - Bearer: []
+      description: 해당 룸에 메시지를 전송합니다.
+      operationId: sendMessage
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: 메시지전송
+          required: true
+          schema:
+            type: object
+            properties:
+              roomID:
+                type: string
+                description: 메시지 타입
+                required: true
+                default: '168215086443264582'
+              UUID:
+                type: string
+                description: 전송자UUID
+                required: true
+                default: '565892925'
+              msg:
+                type: object
+                description: 컨텐츠메시지
+                required: true
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        description: 메시지 타입
+                        required: true
+                        default: volumn
+                      command:
+                        type: string
+                        description: 실행될커맨드
+                        required: true
+                        default: up
+                      content:
+                        type: string
+                        description: 컨텐츠메시지
+                        required: true
+                        default: test msg
+      responses:
+        '200':
+          description: 해당방에 메시지 전송 성공
+          schema:
+            $ref: '#/paths/~1message/post/parameters/0/schema'
+        '412':
+          description: 데이터 베이스 에러.
+  '/message/{roomID}':
+    get:
+      tags:
+        - message
+      summary: 메시지 리스트
+      security:
+        - Bearer: []
+      description: 해당 룸에 전송되었던 메시지 리스트를 가져옵니다.
+      operationId: getMsgById
+      produces:
+        - application/json
+      parameters:
+        - name: roomID
+          in: path
+          description: roomID
+          required: true
+          type: integer
+          format: int64
+          default: '168215086443264582'
+      responses:
+        '200':
+          description: 메시지 정보 조회 성공.
+          schema:
+            type: object
+            allOf:
+              - $ref: '#/paths/~1user/get/responses/200/schema/allOf/0'
+            properties:
+              status:
+                default: '200'
+              message:
+                default: success
+              data:
+                type: array
+                items:
+                  oneOf:
+                    - type: object
+                      allOf:
+                        - $ref: '#/paths/~1message/post/parameters/0/schema'
+                      properties:
+                        messageID:
+                          default: 0f35eae4-ba92-494b-a128-33285934ce92
+                        updatedAt:
+                          default: '1666681186641'
+                        createdAt:
+                          default: '1666681186641'
+                        roomID:
+                          default: '168215086443264582'
+                        UUID:
+                          default: '565892925'
+                    - $ref: '#/paths/~1message~1%7BroomID%7D/get/responses/200/schema/properties/data/items/oneOf/0'
+                    - $ref: '#/paths/~1message~1%7BroomID%7D/get/responses/200/schema/properties/data/items/oneOf/0'
+        '412':
+          description: 데이터 베이스 에러.
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+externalDocs:
+  description: Find out more about  LGe DataShare Platform
+  url: 'http://datashare.tosky.co.kr'
