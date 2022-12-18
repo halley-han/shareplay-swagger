@@ -5,7 +5,7 @@ name: deploy
 # 해당 브랜치가 push 될 때 해당 액션을 실행
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 # 액션을 실행시키는 runner의 운영체제
 jobs:
   build:
