@@ -63,3 +63,8 @@ jobs:
           --deployment-config-name CodeDeployDefault.OneAtATime
           --deployment-group-name shareplay-swagger
           --s3-location bucket=shareplay-swagger,bundleType=zip,key=shareplay-zip.zip
+      - name: Send message to ms teams
+        uses: dhollerbach/actions.send-message-to-ms-teams@1.0.10
+        with:
+          webhook: 'https://lgeteams.webhook.office.com/webhookb2/63cec149-5cbe-4045-8230-0b44e3888564@5069cde4-642a-45c0-8094-d0c2dec10be3/IncomingWebhook/35ab07cfb6b5444f89a08abf4421481a/4f423797-6a97-4804-bb18-33d4d65f6ac3'
+          message: 'W00t it werked!'
